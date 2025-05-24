@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,18 +19,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jwhoami.lab_3.ui.theme.Lab3Theme
@@ -54,6 +60,7 @@ fun MainView() {
     var randomNumber by remember { mutableIntStateOf(Random.nextInt(1, 101)) }
     var attemptsLeft by remember { mutableIntStateOf(3) }
     var gameOver by remember { mutableStateOf(false) }
+    var timeLeft by remember { mutableIntStateOf(60) }
 
     Column (
         modifier = Modifier
@@ -84,15 +91,16 @@ fun MainView() {
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
         )
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Attempts left: $attemptsLeft",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        if (resultMessage.isNotEmpty()) {
+            Text(
+                text = resultMessage,
+                style = MaterialTheme.typography.bodyMedium,
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         Button (
             onClick = {
@@ -125,14 +133,13 @@ fun MainView() {
             )
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
-
         OutlinedButton (
             onClick = {
                 guess = ""
                 resultMessage = ""
                 randomNumber = Random.nextInt(1, 101)
                 attemptsLeft = 3
+                timeLeft = 60
                 gameOver = false
             },
             modifier = Modifier.fillMaxWidth(),
@@ -143,13 +150,29 @@ fun MainView() {
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        if (resultMessage.isNotEmpty()) {
-            Text(
-                text = resultMessage,
-                style = MaterialTheme.typography.bodyMedium
-            )
+        Text(
+            text = "Attempts left: $attemptsLeft",
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Text(
+            text = "Time left: ${timeLeft}s",
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+
+    LaunchedEffect (gameOver) {
+        if (!gameOver) {
+            while (timeLeft > 0) {
+                kotlinx.coroutines.delay(1000)
+                timeLeft--
+            }
+            if (timeLeft == 0) {
+                resultMessage = "Time's up! The number was $randomNumber."
+                gameOver = true
+            }
         }
     }
 }
